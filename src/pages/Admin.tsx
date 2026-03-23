@@ -382,7 +382,7 @@ export default function Admin() {
           <TabsContent value="exercises"><ExercisesTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
         </Tabs>
-      </main>
+      </div>
     </div>
   );
 }
