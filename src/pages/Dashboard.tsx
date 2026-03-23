@@ -52,7 +52,7 @@ const Dashboard = () => {
   return (
     <div className="bg-background">
 
-      <main className="container py-8 space-y-8">
+      <div className="container py-8 space-y-8">
         {/* Welcome */}
         <div className="animate-fade-up">
           <h1 className="text-2xl font-display font-bold text-foreground">
