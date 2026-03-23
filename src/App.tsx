@@ -16,6 +16,8 @@ import Roadmaps from "./pages/Roadmaps";
 import Workout from "./pages/Workout";
 import Readiness from "./pages/Readiness";
 import AIChat from "./pages/AIChat";
+import Admin from "./pages/Admin";
+import AdminRoute from "@/components/AdminRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
