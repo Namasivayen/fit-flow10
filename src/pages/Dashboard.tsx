@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell, Map, Activity, MessageSquare, LogOut, User } from "lucide-react";
+import { Dumbbell, Map, Activity, MessageSquare } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
