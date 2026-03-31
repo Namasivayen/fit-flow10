@@ -26,6 +26,7 @@ const Roadmaps = () => {
   const [category, setCategory] = useState("All");
   const [difficulty, setDifficulty] = useState("All");
   const [activeRoadmap, setActiveRoadmap] = useState<any>(null);
+  const [switchTarget, setSwitchTarget] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
