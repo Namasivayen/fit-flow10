@@ -51,6 +51,14 @@ const Roadmaps = () => {
       .then(({ data }) => setActiveRoadmap(data));
   }, [user]);
 
+  const handleStartPlan = (roadmapId: string) => {
+    if (activeRoadmap && activeRoadmap.roadmap_id !== roadmapId) {
+      setSwitchTarget(roadmapId);
+    } else {
+      activateRoadmap(roadmapId);
+    }
+  };
+
   const activateRoadmap = async (roadmapId: string) => {
     if (!user) return;
     if (activeRoadmap) {
@@ -66,6 +74,14 @@ const Roadmaps = () => {
       current_day: 1,
     });
     if (!error) {
+      setActiveRoadmap(null);
+      const { data } = await supabase
+        .from("user_roadmaps")
+        .select("*, fitness_roadmaps(*)")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+      setActiveRoadmap(data);
       navigate("/workout");
     }
   };
