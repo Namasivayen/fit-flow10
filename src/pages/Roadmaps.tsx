@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dumbbell, ArrowLeft, Clock, BarChart3, Filter, ArrowRight } from "lucide-react";
 
 const categories = ["All", "Strength & Workouts", "Cardio Conditioning", "Yoga & Mobility", "Targeted Exercises", "Physical Activities"];
