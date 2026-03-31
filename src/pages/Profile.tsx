@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, Target, Ruler, Weight, Utensils, Activity, Calendar, Dumbbell } from "lucide-react";
+import WorkoutSchedule from "@/components/WorkoutSchedule";
 
 export default function Profile() {
   const { user } = useAuth();
