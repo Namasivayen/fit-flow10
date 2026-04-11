@@ -92,14 +92,15 @@ export default function WorkoutScheduleSettings() {
   const subscribePush = async () => {
     try {
       const reg = await navigator.serviceWorker.ready;
-      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      if (!vapidKey) {
+      // Fetch VAPID public key from backend
+      const { data: keyData, error: keyErr } = await supabase.functions.invoke("get-vapid-key");
+      if (keyErr || !keyData?.vapidPublicKey) {
         toast.error("Push notifications not configured");
         return;
       }
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: vapidKey,
+        applicationServerKey: keyData.vapidPublicKey,
       });
       const json = sub.toJSON();
       await supabase.from("push_subscriptions").upsert(
