@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, Target, Ruler, Weight, Utensils, Activity, Calendar, Dumbbell } from "lucide-react";
+import WorkoutScheduleSettings from "@/components/WorkoutScheduleSettings";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -145,6 +146,9 @@ export default function Profile() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Workout Schedule */}
+      <WorkoutScheduleSettings />
 
       {/* Readiness badge */}
       {stats?.latestCategory && (
