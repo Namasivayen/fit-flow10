@@ -21,7 +21,6 @@ const OTPVerification = ({ userEmail, onVerified, onCancel }: OTPVerificationPro
   const [sending, setSending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [otpSent, setOtpSent] = useState(false);
-  const [devCode, setDevCode] = useState<string | null>(null);
 
   const sendOTP = useCallback(async () => {
     setSending(true);

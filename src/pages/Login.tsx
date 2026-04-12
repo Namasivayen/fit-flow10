@@ -63,19 +63,8 @@ const Login = () => {
 
       setUserEmail(email);
 
-      // Check if device is trusted
-      const fingerprint = await getDeviceFingerprint();
-      const { data: deviceData } = await supabase.functions.invoke("check-device", {
-        body: { deviceFingerprint: fingerprint },
-      });
-
-      if (deviceData?.trusted) {
-        // Device is trusted, proceed directly
-        navigate("/dashboard");
-      } else {
-        // New device — require OTP
-        setStep("otp");
-      }
+      // Always require OTP verification on every login
+      setStep("otp");
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Something went wrong", variant: "destructive" });
     } finally {
