@@ -2,11 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Dumbbell, Mail, Lock } from "lucide-react";
+import { Dumbbell, Mail, Lock, Shield, User } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,11 +16,17 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
     } else {
+      await supabase.from("login_logs").insert({
+        user_id: data.user!.id,
+        email: data.user?.email ?? email,
+        role: "user",
+        event_type: "login",
+      });
       navigate("/dashboard");
     }
     setLoading(false);
@@ -36,61 +40,33 @@ const Login = () => {
             <Dumbbell className="w-7 h-7 text-primary" />
           </div>
           <h1 className="text-2xl font-display font-bold text-foreground">Welcome back</h1>
-          <p className="text-muted-foreground mt-1">Sign in to continue your fitness journey</p>
+          <p className="text-muted-foreground mt-1">Choose how you want to sign in</p>
         </div>
 
         <Card className="shadow-lg border-border/50">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-display">Sign In</CardTitle>
-            <CardDescription>Enter your credentials below</CardDescription>
+            <CardDescription>Select your account type below</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
+          <CardContent className="space-y-4">
+            <Link to="/admin-login">
+              <Button variant="outline" className="w-full justify-start h-14 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive">
+                <Shield className="w-5 h-5 mr-3" />
+                <div className="text-left">
+                  <span className="font-medium">Sign In as Admin</span>
+                  <p className="text-xs text-muted-foreground">Manage roadmaps and content</p>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
               </Button>
-            </form>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-primary font-medium hover:underline">
-                Sign up
-              </Link>
-            </p>
+            </Link>
+            <Link to="/user-login">
+              <Button variant="outline" className="w-full justify-start h-14">
+                <User className="w-5 h-5 mr-3" />
+                <div className="text-left">
+                  <span className="font-medium">Sign In as User</span>
+                  <p className="text-xs text-muted-foreground">Access your fitness journey</p>
+                </div>
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
