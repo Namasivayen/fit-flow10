@@ -37,17 +37,17 @@ FOR SELECT
 TO authenticated
 USING (public.has_role(auth.uid(), 'admin'));
 
--- Auto-grant admin role to the seeded admin account if it exists.
+-- Auto-grant admin role to the seeded admin accounts if they exist.
 INSERT INTO public.user_roles (user_id, role)
 SELECT id, 'admin'::app_role
 FROM auth.users
-WHERE email = 'admin123@gmail.com'
+WHERE email IN ('admin123@gmail.com', 'admin@gmail.com')
 ON CONFLICT (user_id, role) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION public.handle_admin_user_role()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.email = 'admin123@gmail.com' THEN
+  IF NEW.email IN ('admin123@gmail.com', 'admin@gmail.com') THEN
     INSERT INTO public.user_roles (user_id, role)
     VALUES (NEW.id, 'admin')
     ON CONFLICT (user_id, role) DO NOTHING;
