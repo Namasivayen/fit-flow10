@@ -110,66 +110,6 @@ export type Database = {
         }
         Relationships: []
       }
-      otp_codes: {
-        Row: {
-          attempts: number
-          code: string
-          created_at: string
-          delivery_method: string
-          expires_at: string
-          id: string
-          user_id: string
-          verified: boolean
-        }
-        Insert: {
-          attempts?: number
-          code: string
-          created_at?: string
-          delivery_method?: string
-          expires_at: string
-          id?: string
-          user_id: string
-          verified?: boolean
-        }
-        Update: {
-          attempts?: number
-          code?: string
-          created_at?: string
-          delivery_method?: string
-          expires_at?: string
-          id?: string
-          user_id?: string
-          verified?: boolean
-        }
-        Relationships: []
-      }
-      push_subscriptions: {
-        Row: {
-          auth_key: string
-          created_at: string
-          endpoint: string
-          id: string
-          p256dh: string
-          user_id: string
-        }
-        Insert: {
-          auth_key: string
-          created_at?: string
-          endpoint: string
-          id?: string
-          p256dh: string
-          user_id: string
-        }
-        Update: {
-          auth_key?: string
-          created_at?: string
-          endpoint?: string
-          id?: string
-          p256dh?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       readiness_scores: {
         Row: {
           category: string
@@ -301,33 +241,6 @@ export type Database = {
           },
         ]
       }
-      trusted_devices: {
-        Row: {
-          created_at: string
-          device_fingerprint: string
-          device_name: string | null
-          id: string
-          last_used_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          device_fingerprint: string
-          device_name?: string | null
-          id?: string
-          last_used_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          device_fingerprint?: string
-          device_name?: string | null
-          id?: string
-          last_used_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_profiles: {
         Row: {
           activity_level: string | null
@@ -340,7 +253,6 @@ export type Database = {
           id: string
           medical_disclaimer_accepted: boolean | null
           onboarding_completed: boolean | null
-          phone_number: string | null
           updated_at: string
           user_id: string
           weight_kg: number | null
@@ -356,7 +268,6 @@ export type Database = {
           id?: string
           medical_disclaimer_accepted?: boolean | null
           onboarding_completed?: boolean | null
-          phone_number?: string | null
           updated_at?: string
           user_id: string
           weight_kg?: number | null
@@ -372,7 +283,6 @@ export type Database = {
           id?: string
           medical_disclaimer_accepted?: boolean | null
           onboarding_completed?: boolean | null
-          phone_number?: string | null
           updated_at?: string
           user_id?: string
           weight_kg?: number | null
@@ -485,42 +395,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      workout_schedules: {
-        Row: {
-          created_at: string
-          early_reminder_minutes: number | null
-          id: string
-          preferred_time: string
-          reminders_enabled: boolean
-          timezone: string
-          updated_at: string
-          user_id: string
-          workout_days: string[]
-        }
-        Insert: {
-          created_at?: string
-          early_reminder_minutes?: number | null
-          id?: string
-          preferred_time?: string
-          reminders_enabled?: boolean
-          timezone?: string
-          updated_at?: string
-          user_id: string
-          workout_days?: string[]
-        }
-        Update: {
-          created_at?: string
-          early_reminder_minutes?: number | null
-          id?: string
-          preferred_time?: string
-          reminders_enabled?: boolean
-          timezone?: string
-          updated_at?: string
-          user_id?: string
-          workout_days?: string[]
-        }
-        Relationships: []
       }
     }
     Views: {
