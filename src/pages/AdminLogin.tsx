@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Dumbbell, Mail, Lock, Shield } from "lucide-react";
-
-const ADMIN_EMAIL = "admin123@gmail.com";
-const ADMIN_PASSWORD = "12345678";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -20,12 +18,19 @@ const AdminLogin = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      sessionStorage.setItem("isAdmin", "true");
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (!error && data.user) {
+      await supabase.from("login_logs").insert({
+        user_id: data.user.id,
+        email: data.user.email ?? email,
+        role: "admin",
+        event_type: "login",
+      });
       toast({ title: "Welcome, Admin!" });
       navigate("/admin");
     } else {
-      toast({ title: "Invalid credentials", variant: "destructive" });
+      toast({ title: "Invalid credentials", description: error?.message, variant: "destructive" });
     }
     setLoading(false);
   };

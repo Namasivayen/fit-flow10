@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Trash2, Edit, LogOut, Map, Clock, BarChart3, Users, Dumbbell } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Edit, LogOut, Map, Users, Dumbbell } from "lucide-react";
 
 const categories = ["Strength & Workouts", "Cardio Conditioning", "Yoga & Mobility", "Targeted Exercises", "Physical Activities"];
 const difficulties = ["Beginner", "Intermediate", "Advanced"];
@@ -54,10 +56,51 @@ interface Exercise {
   category: string | null;
 }
 
+interface ReadinessLog {
+  id: string;
+  user_id: string;
+  score_date: string;
+  score: number;
+  category: string;
+  sleep_hours: number | null;
+  missed_workouts: number | null;
+  perceived_exertion: number | null;
+  consecutive_training_days: number | null;
+  created_at: string;
+}
+
+interface WorkoutLog {
+  id: string;
+  user_id: string;
+  day_number: number | null;
+  completed: boolean | null;
+  skipped: boolean | null;
+  logged_at: string;
+  roadmap_exercise_id: string | null;
+  roadmap_exercises?: {
+    exercise_id?: string;
+    day_number?: number;
+    exercises?: { name?: string };
+  } | null;
+}
+
+interface LoginLog {
+  id: string;
+  user_id: string;
+  email: string;
+  role: string;
+  event_type: string;
+  created_at: string;
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [readinessLogs, setReadinessLogs] = useState<ReadinessLog[]>([]);
+  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
+  const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRoadmapForm, setShowRoadmapForm] = useState(false);
   const [showPhases, setShowPhases] = useState<string | null>(null);
@@ -87,13 +130,13 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    const isAdmin = sessionStorage.getItem("isAdmin");
-    if (!isAdmin) {
+    if (authLoading) return;
+    if (!user) {
       navigate("/admin-login");
       return;
     }
     fetchAll();
-  }, []);
+  }, [authLoading, user]);
 
   const seedSampleData = async () => {
     const { data: existingRoadmaps } = await supabase.from("fitness_roadmaps").select("id").limit(1);
@@ -166,7 +209,7 @@ const AdminDashboard = () => {
         { name: "Cat-Cow Stretch", muscle_group: "Spine", category: "Yoga" },
       ];
 
-      const { data: createdExercises } = await supabase.from("exercises").insert(exercisesData).select();
+      await supabase.from("exercises").insert(exercisesData).select();
 
       for (const phase of allPhases) {
         const dayExercises = [
@@ -213,11 +256,45 @@ const AdminDashboard = () => {
     ]);
     setRoadmaps(roadmapsRes.data || []);
     setExercises(exercisesRes.data || []);
+
+    const [readinessRes, workoutRes, loginRes] = await Promise.all([
+      supabase
+        .from("readiness_scores")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("workout_logs")
+        .select(`
+          *,
+          roadmap_exercises(
+            exercise_id,
+            day_number,
+            exercises(name)
+          )
+        `)
+        .order("logged_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("login_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
+
+    const fetchError = roadmapsRes.error || exercisesRes.error || readinessRes.error || workoutRes.error || loginRes.error;
+    if (fetchError) {
+      toast({ title: "Failed to load admin data", description: fetchError.message, variant: "destructive" });
+    }
+
+    setReadinessLogs((readinessRes.data as ReadinessLog[]) || []);
+    setWorkoutLogs((workoutRes.data as WorkoutLog[]) || []);
+    setLoginLogs((loginRes.data as LoginLog[]) || []);
     setLoading(false);
   };
 
-  const handleSignOut = () => {
-    sessionStorage.removeItem("isAdmin");
+  const handleSignOut = async () => {
+    await signOut();
     navigate("/");
   };
 
@@ -614,6 +691,102 @@ const AdminDashboard = () => {
             ))}
           </div>
         )}
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Recent Readiness</CardTitle>
+              <CardDescription>Latest user readiness entries</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Score</TableHead>
+                    <TableHead>Category</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {readinessLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-mono text-xs">{log.user_id.slice(0, 8)}…</TableCell>
+                      <TableCell>{log.score}</TableCell>
+                      <TableCell>{log.category}</TableCell>
+                    </TableRow>
+                  ))}
+                  {readinessLogs.length === 0 && (
+                    <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-6">No readiness logs yet</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Recent Workout Logs</CardTitle>
+              <CardDescription>Latest completed and skipped exercise logs</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Exercise</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {workoutLogs.map((log) => {
+                    const exerciseName = log.roadmap_exercises?.exercises?.name || "—";
+                    const status = log.completed ? "Done" : log.skipped ? "Skipped" : "Open";
+                    return (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-mono text-xs">{log.user_id.slice(0, 8)}…</TableCell>
+                        <TableCell>{exerciseName}</TableCell>
+                        <TableCell>{status}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {workoutLogs.length === 0 && (
+                    <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-6">No workout logs yet</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Recent Login Logs</CardTitle>
+              <CardDescription>User and admin sign-in events</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loginLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="text-xs">{log.email}</TableCell>
+                      <TableCell><Badge variant="secondary">{log.role}</Badge></TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                  {loginLogs.length === 0 && (
+                    <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-6">No login logs yet</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );

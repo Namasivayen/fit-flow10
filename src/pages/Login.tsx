@@ -16,11 +16,17 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
     } else {
+      await supabase.from("login_logs").insert({
+        user_id: data.user!.id,
+        email: data.user?.email ?? email,
+        role: "user",
+        event_type: "login",
+      });
       navigate("/dashboard");
     }
     setLoading(false);

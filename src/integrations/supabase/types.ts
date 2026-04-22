@@ -110,6 +110,33 @@ export type Database = {
         }
         Relationships: []
       }
+      login_logs: {
+        Row: {
+          created_at: string
+          email: string
+          event_type: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_type: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_type?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       readiness_scores: {
         Row: {
           category: string

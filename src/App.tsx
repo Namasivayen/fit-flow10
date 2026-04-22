@@ -21,6 +21,7 @@ import Readiness from "./pages/Readiness";
 import AIChat from "./pages/AIChat";
 import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,7 +54,7 @@ const App = () => (
             <Route path="/readiness" element={<ProtectedWithLayout><Readiness /></ProtectedWithLayout>} />
             <Route path="/chat" element={<ProtectedWithLayout><AIChat /></ProtectedWithLayout>} />
             <Route path="/profile" element={<ProtectedWithLayout><Profile /></ProtectedWithLayout>} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
