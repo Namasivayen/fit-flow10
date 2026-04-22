@@ -3,6 +3,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+const ADMIN_EMAIL = "namasivayenns@gmail.com";
+
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
@@ -27,7 +29,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || (!isAdmin && user.email !== ADMIN_EMAIL)) {
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -24,6 +24,13 @@ const AdminLogin = () => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (data.user) {
+      if (data.user.email !== ADMIN_EMAIL) {
+        await supabase.auth.signOut();
+        toast({ title: "Invalid credentials", description: "This account is not allowed as admin.", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
       await supabase.from("login_logs").insert({
         user_id: data.user.id,
         email: data.user.email ?? email,
