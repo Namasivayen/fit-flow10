@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dumbbell, ArrowLeft, Clock, BarChart3, Filter, ArrowRight } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Dumbbell, ArrowLeft, Clock, BarChart3, Filter, ArrowRight, Check, RefreshCw } from "lucide-react";
 
 const categories = ["All", "Strength & Workouts", "Cardio Conditioning", "Yoga & Mobility", "Targeted Exercises", "Physical Activities"];
 const difficulties = ["All", "Beginner", "Intermediate", "Advanced"];
@@ -28,7 +29,15 @@ const Roadmaps = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      let query = supabase.from("fitness_roadmaps").select("*").eq("is_published", true);
+      let query = supabase.from("fitness_roadmaps").select(`
+        *,
+        roadmap_phases(
+          id,
+          title,
+          week_number,
+          roadmap_exercises(*)
+        )
+      `).eq("is_published", true);
       if (category !== "All") query = query.eq("category", category);
       if (difficulty !== "All") query = query.eq("difficulty", difficulty);
       const { data } = await query.order("created_at");
@@ -65,6 +74,26 @@ const Roadmaps = () => {
     });
     if (!error) {
       navigate("/workout");
+    }
+  };
+
+  const switchRoadmap = async (roadmapId: string) => {
+    if (!user) return;
+    if (activeRoadmap) {
+      await supabase
+        .from("user_roadmaps")
+        .update({ is_active: false, completed_at: new Date().toISOString() })
+        .eq("id", activeRoadmap.id);
+    }
+    const { error } = await supabase.from("user_roadmaps").insert({
+      user_id: user.id,
+      roadmap_id: roadmapId,
+      is_active: true,
+      current_day: 1,
+    });
+    if (!error) {
+      toast({ title: "Roadmap switched!" });
+      window.location.reload();
     }
   };
 
@@ -120,9 +149,14 @@ const Roadmaps = () => {
                 </p>
                 <p className="text-sm text-muted-foreground">Day {activeRoadmap.current_day}</p>
               </div>
-              <Button size="sm" onClick={() => navigate("/workout")}>
-                Continue <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => switchRoadmap(roadmap.id)}>
+                  <RefreshCw className="w-4 h-4 mr-1" /> Switch Plan
+                </Button>
+                <Button size="sm" onClick={() => navigate("/workout")}>
+                  Continue <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -134,43 +168,58 @@ const Roadmaps = () => {
           <div className="text-center py-12 text-muted-foreground">No roadmaps found for these filters.</div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {roadmaps.map((rm, i) => (
-              <Card
-                key={rm.id}
-                className="border-border/50 hover:shadow-md transition-shadow opacity-0 animate-fade-up"
-                style={{ animationDelay: `${i * 80}ms`, animationFillMode: "forwards" }}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <CardTitle className="font-display text-base">{rm.title}</CardTitle>
-                      <CardDescription className="mt-1 text-xs">{rm.category}</CardDescription>
+            {roadmaps.map((rm, i) => {
+              const totalExercises = rm.roadmap_phases?.reduce((sum: number, p: any) => sum + (p.roadmap_exercises?.length || 0), 0) || 0;
+              const isActive = activeRoadmap?.roadmap_id === rm.id;
+              return (
+                <Card
+                  key={rm.id}
+                  className={`border-border/50 hover:shadow-md transition-shadow opacity-0 animate-fade-up ${isActive ? "border-primary/50 bg-primary/5" : ""}`}
+                  style={{ animationDelay: `${i * 80}ms`, animationFillMode: "forwards" }}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="font-display text-base">{rm.title}</CardTitle>
+                          {isActive && <Badge className="text-xs bg-primary text-primary-foreground">Active</Badge>}
+                        </div>
+                        <CardDescription className="mt-1 text-xs">{rm.category}</CardDescription>
+                      </div>
+                      <Badge variant="outline" className={difficultyColor[rm.difficulty]}>
+                        {rm.difficulty}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className={difficultyColor[rm.difficulty]}>
-                      {rm.difficulty}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                    {rm.description}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" /> {rm.duration_weeks} weeks
-                    </span>
-                  </div>
-                  <Button
-                    className="w-full"
-                    variant={activeRoadmap?.roadmap_id === rm.id ? "secondary" : "default"}
-                    disabled={activeRoadmap?.roadmap_id === rm.id}
-                    onClick={() => activateRoadmap(rm.id)}
-                  >
-                    {activeRoadmap?.roadmap_id === rm.id ? "Currently Active" : "Start This Plan"}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                      {rm.description}
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" /> {rm.duration_weeks} weeks
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Dumbbell className="w-3.5 h-3.5" /> {totalExercises} exercises
+                      </span>
+                    </div>
+                    {isActive ? (
+                      <Button className="w-full" onClick={() => navigate("/workout")}>
+                        <Check className="w-4 h-4 mr-2" /> Continue Training
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => activateRoadmap(rm.id)}
+                      >
+                        {activeRoadmap ? "Switch to This Plan" : "Start This Plan"}
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>
