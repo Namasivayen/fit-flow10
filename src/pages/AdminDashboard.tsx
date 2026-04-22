@@ -257,7 +257,7 @@ const AdminDashboard = () => {
     setRoadmaps(roadmapsRes.data || []);
     setExercises(exercisesRes.data || []);
 
-    const [readinessRes, workoutRes, loginRes] = await Promise.all([
+    const [readinessRes, workoutRes] = await Promise.all([
       supabase
         .from("readiness_scores")
         .select("*")
@@ -275,21 +275,27 @@ const AdminDashboard = () => {
         `)
         .order("logged_at", { ascending: false })
         .limit(10),
-      supabase
-        .from("login_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(10),
     ]);
 
-    const fetchError = roadmapsRes.error || exercisesRes.error || readinessRes.error || workoutRes.error || loginRes.error;
+    let loginLogsData: LoginLog[] = [];
+    const loginRes = await supabase
+      .from("login_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (!loginRes.error) {
+      loginLogsData = (loginRes.data as LoginLog[]) || [];
+    }
+
+    const fetchError = roadmapsRes.error || exercisesRes.error || readinessRes.error || workoutRes.error;
     if (fetchError) {
       toast({ title: "Failed to load admin data", description: fetchError.message, variant: "destructive" });
     }
 
     setReadinessLogs((readinessRes.data as ReadinessLog[]) || []);
     setWorkoutLogs((workoutRes.data as WorkoutLog[]) || []);
-    setLoginLogs((loginRes.data as LoginLog[]) || []);
+    setLoginLogs(loginLogsData);
     setLoading(false);
   };
 

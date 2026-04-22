@@ -31,12 +31,16 @@ const AdminLogin = () => {
         return;
       }
 
-      await supabase.from("login_logs").insert({
-        user_id: data.user.id,
-        email: data.user.email ?? email,
-        role: "admin",
-        event_type: "login",
-      });
+      try {
+        await supabase.from("login_logs").insert({
+          user_id: data.user.id,
+          email: data.user.email ?? email,
+          role: "admin",
+          event_type: "login",
+        });
+      } catch {
+        // login_logs is optional until the migration is applied
+      }
       toast({ title: "Welcome, Admin!" });
       navigate("/admin");
     } else {
