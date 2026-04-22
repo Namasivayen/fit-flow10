@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "@/hooks/use-toast";
 import { Dumbbell, Mail, Lock, Shield } from "lucide-react";
 
-const ADMIN_EMAIL = "admin@gmail.com";
+const ADMIN_EMAIL = "namasivayenns@gmail.com";
 const ADMIN_PASSWORD = "12345678";
 
 const AdminLogin = () => {
@@ -23,22 +23,10 @@ const AdminLogin = () => {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    let user = data.user ?? null;
-
-    if (!user && email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      const signup = await supabase.auth.signUp({ email, password });
-      user = signup.data.user ?? null;
-      if (signup.error) {
-        toast({ title: "Invalid credentials", description: signup.error.message, variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-    }
-
-    if (user) {
+    if (data.user) {
       await supabase.from("login_logs").insert({
-        user_id: user.id,
-        email: user.email ?? email,
+        user_id: data.user.id,
+        email: data.user.email ?? email,
         role: "admin",
         event_type: "login",
       });
